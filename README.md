@@ -2,14 +2,14 @@
 Firebase based smart plug that supports any appliance
 
 App Screenshots:
-![](Assets/app1)
-![](Assets/app2)
+![](Assets/app1.png)
+![](Assets/app2.png)
 
 Circuit Diagram:
-![](Assets/circuitDiagram)
+![](Assets/circuitDiagram.png)
 
 System Design:
-![](Assets/systemDesign)
+![](Assets/systemDesign.png)
 
 Demo Video
 ![](Assets/demo.gif)
