@@ -11,5 +11,5 @@ Firebase based smart plug that supports any appliance
 ### System Design:
 ![](Assets/systemDesign.png)
 
-### Demo Video
+### Demo Video:
 ![](Assets/demo.gif)
