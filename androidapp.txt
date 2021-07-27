@@ -1,0 +1,237 @@
+package com.graydroid.smartsocket;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Context;
+import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+public class Home extends AppCompatActivity implements ValueEventListener{
+    //DATABASE STUFF
+    private FirebaseDatabase firebaseDatabase=FirebaseDatabase.getInstance();
+    private DatabaseReference mRootRef=firebaseDatabase.getReference();
+    private DatabaseReference Sock1=mRootRef.child("SOCK1");
+    private DatabaseReference Sock2=mRootRef.child("SOCK2");
+    private DatabaseReference Sock3=mRootRef.child("SOCK3");
+    private DatabaseReference Sock4=mRootRef.child("SOCK4");
+    //dbms for ldr
+    private DatabaseReference dbldrinit=mRootRef.child("LDRINIT");
+    private DatabaseReference dbldrstat=mRootRef.child("LDR");
+
+    //Shake Stuff
+    private SensorManager sm;
+    private float acelVal;
+    private float acelLast;
+    private float shake;
+
+
+
+    private TextView tvs1,tvs2,tvs3,tvldr;
+    private Button s1on,s1off,s2on,s2off,s3on,s3off,ldrinit,ldron,ldroff;
+
+
+
+
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_home);
+
+         tvs1=findViewById(R.id.tv1);
+         tvs2=findViewById(R.id.tv2);
+         tvs3=findViewById(R.id.tv3);
+         tvldr=findViewById(R.id.tvldr);
+         s1on=findViewById(R.id.s1on);
+         s1off=findViewById(R.id.s1off);
+         s2on=findViewById(R.id.s2on);
+         s2off=findViewById(R.id.s2off);
+         s3on=findViewById(R.id.s3on);
+         s3off=findViewById(R.id.s3off);
+         ldrinit=findViewById(R.id.ldrinit);
+         ldron=findViewById(R.id.ldron);
+         ldroff=findViewById(R.id.ldroff);
+
+         sm=(SensorManager)getSystemService(Context.SENSOR_SERVICE);
+         sm.registerListener(sensorListener, sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) ,SensorManager.SENSOR_DELAY_NORMAL);
+         acelVal = SensorManager.GRAVITY_EARTH;
+         acelLast = SensorManager.GRAVITY_EARTH;
+         shake = 0.00f;
+        dbldrinit.setValue("OFF");
+
+         //SOCKET 1
+         s1on.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View v) {
+                 Sock1.setValue("ON");
+             }
+         });
+        s1off.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Sock1.setValue("OFF");
+            }
+        });
+
+        //SOCKET 2
+        s2on.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Sock2.setValue("ON");
+            }
+        });
+        s2off.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Sock2.setValue("OFF");
+            }
+        });
+
+        //SOCKET 3
+        s3on.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Sock3.setValue("ON");
+            }
+        });
+        s3off.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Sock3.setValue("OFF");
+            }
+        });
+
+        //LDR
+        ldron.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbldrstat.setValue("ON");
+
+            }
+        });
+
+        ldroff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbldrstat.setValue("OFF");
+
+            }
+        });
+
+
+        //LDR INIT PAGE
+        ldrinit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbldrinit.setValue("ON");
+                Intent intent=new Intent(Home.this,ldrinit.class);
+                startActivity(intent);
+            }
+        });
+
+    }
+
+    private final SensorEventListener sensorListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent sensorEvent) {
+            float x = sensorEvent.values[0];
+            float y = sensorEvent.values[1];
+            float z = sensorEvent.values[2];
+
+            acelLast=acelVal;
+            acelVal=(float) Math.sqrt((double) (x*x +y*y + z*z));
+            float delta=acelVal - acelLast;
+            shake = shake * 0.9f +delta;
+
+            if(shake > 9){
+                //FUNCTION HERE
+                String status =tvs1.getText().toString();
+                if(status.equals("ON")){
+
+                    Toast toast=Toast.makeText(getApplicationContext(),"TURNING OFF",Toast.LENGTH_LONG);
+                    toast.show();
+                    Sock1.setValue("OFF");
+
+
+                }
+                else if(status.equals("OFF")){
+                    Toast toast=Toast.makeText(getApplicationContext(),"TURNING ON",Toast.LENGTH_LONG);
+                    toast.show();
+                    Sock1.setValue("ON");
+
+                }
+                else{
+                    Toast toast=Toast.makeText(getApplicationContext(),"AN ERROR HAS OCCURED",Toast.LENGTH_LONG);
+                    toast.show();
+                }
+
+            }
+
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+        }
+    };
+
+
+    @Override
+    public void onDataChange(@NonNull DataSnapshot snapshot) {
+        if(snapshot.getValue(String.class)!=null){
+            String key = snapshot.getKey();
+
+            if(key.equals("SOCK1")){
+                String value=snapshot.getValue(String.class);
+                tvs1.setText(value);
+            }
+            else if(key.equals("SOCK2")){
+                String value=snapshot.getValue(String.class);
+                tvs2.setText(value);
+            }
+            else if(key.equals("SOCK3")){
+                String value=snapshot.getValue(String.class);
+                tvs3.setText(value);
+            }
+            else if(key.equals("LDR")){
+                String value=snapshot.getValue(String.class);
+                tvldr.setText(value);
+            }
+
+        }
+
+    }
+
+    @Override
+    public void onCancelled(@NonNull DatabaseError error) {
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Sock1.addValueEventListener(this);
+        Sock2.addValueEventListener(this);
+        Sock3.addValueEventListener(this);
+        Sock4.addValueEventListener(this);
+        dbldrinit.addValueEventListener(this);
+        dbldrstat.addValueEventListener(this);
+    }
+}
